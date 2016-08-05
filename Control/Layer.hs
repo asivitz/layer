@@ -13,13 +13,7 @@ module Control.Layer
     ) where
 
 import Data.List
-import Data.Functor.Identity
-
--- Grab a few things from Control.Lens so that we don't incur the dependency
-type Lens' s a = forall f. Functor f => (a -> f a) -> s -> f s
-
-over :: Lens' s a -> (a -> a) -> s -> s
-over l f = runIdentity . l (Identity . f)
+import Control.Lens
 
 type Layer s i = s -> i -> s
 
