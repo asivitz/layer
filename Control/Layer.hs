@@ -5,6 +5,7 @@ module Control.Layer
     Layer,
     (*.*),
     dynamic,
+    postProcess,
     resolveDiff,
     when,
     liftState,
@@ -22,6 +23,9 @@ l1 *.* l2 = \s i -> l1 (l2 s i) i
 
 dynamic :: (s -> Layer s i) -> Layer s i
 dynamic layerf s = layerf s s
+
+postProcess :: (s -> s) -> Layer s i -> Layer s i
+postProcess f layer s i = f (layer s i)
 
 resolveDiff :: (s -> s -> s) -> Layer s i -> Layer s i
 resolveDiff f layer s i = f s (layer s i)

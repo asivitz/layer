@@ -36,14 +36,14 @@ debugInput debugstate@DebugState { _isDebugging, _stackIndex, _modelStack } inpu
                          StepBackward -> debugstate { _stackIndex = min (length _modelStack - 1) (max 0 (_stackIndex + 1)) }
                          JumpBackward -> debugstate { _stackIndex = min (length _modelStack - 1) (max 0 (_stackIndex + 10)) }
 
-debugStep :: DebugState b -> DebugState b -> DebugState b
-debugStep oldstate debugstate@DebugState { _isDebugging, _modelStack, _stackIndex, _current } =
+debugStep :: DebugState b -> DebugState b
+debugStep debugstate@DebugState { _isDebugging, _modelStack, _stackIndex, _current } =
         if _isDebugging
             then set current (_modelStack !! _stackIndex) debugstate
             else set modelStack (_current : (if length _modelStack > 1500 then take 1500 _modelStack else _modelStack)) debugstate
 
 liftDebug :: Layer b i -> Layer (DebugState b) i
-liftDebug layer = resolveDiff debugStep (liftState current layer)
+liftDebug layer = postProcess debugStep (liftState current layer)
 
 -- GENERATED #################
 -- makeLenses ''DebugState

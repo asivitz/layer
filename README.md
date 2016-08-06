@@ -30,6 +30,8 @@ The basic data type is a Layer.
 
 You can run update functions sequentially with the __\*.\*__ operator:
 
+    (*.*) :: Layer s i -> Layer s i -> Layer s i
+
     updateUI :: Layer Model Input
     updateGame :: Layer Model Input
     
@@ -37,7 +39,9 @@ You can run update functions sequentially with the __\*.\*__ operator:
 
 Scope them to a specific lens with the __liftState__ function:
 
-    Model :: (UIState, GameState)
+    liftState :: Lens' s s' -> Layer s' i -> Layer s i
+
+    type Model = (UIState, GameState)
     updateGame :: Layer GameState Input
     updateUI :: Layer UIState Input
 
@@ -45,6 +49,9 @@ Scope them to a specific lens with the __liftState__ function:
 
 Change the input type with __liftInput__:
 
+    liftInput :: (i -> [j]) -> Layer s j -> Layer s i
+
+    -- In this example, raw inputs are transformed into game specific messages
     data GameInput = GameTick Double
                    | PlayerJump
 
@@ -60,14 +67,47 @@ Change the input type with __liftInput__:
 
 Conditionally run a layer with __when__:
 
+    when :: (s -> Bool) -> Layer s i -> Layer s i
+
+    -- In this example, the pressing the P key pauses the game.
     Model :: (UIState, GameState, Bool)
     paused :: Model -> Bool
     paused (_,_,isPaused) = isPaused
 
     update = liftState _1 updateUI *.*
              when (not . paused) (liftState gameState (liftInput playerControls updateGame))
+             liftState _3 (\isPaused (KeyDown KeyP) -> not isPaused)
+
+Transform a sub layer's updates with __postProcess__:
+
+    postProcess :: (s -> s) -> Layer s i -> Layer s i
+
+    -- This example adds a simple time traveling debugger
+    -- The P key still pauses, but the left and right arrow keys will step through time to previous game states.
+    type Debug a = (Bool, Int, [a]) -- (isPaused, index, listOfStates)
+
+    type Model = (UIState, GameState, Debug GameState)
+
+    debugResolver :: Model -> Model
+    debugResolver (ui, currentState, (isPaused, index, listOfStates)) = if isPaused
+                                                                           then (ui, listOfStates !! index, (isPaused, index, listOfStates))
+                                                                           else (ui, currentState, (isPaused, 0, currentState : listOfStates))
+
+    update = liftState _1 updateUI *.*
+             postProcess debugResolver (liftState gameState (liftInput playerControls updateGame)) *.*
+             liftState _3 (\(isPaused, index, listOfStates) input -> case input of
+                                    KeyDown KeyP -> (not isPaused, index, listOfStates)
+                                    KeyDown RightArrow -> (isPaused, index - 1, listOfStates)
+                                    KeyDown LeftArrow -> (isPaused, index + 1, listOfStates))
 
 Change the layer function depending on the current state with __dynamic__:
 
-    update = liftState _1 updateUI *.*
-             when (not . paused) (liftState gameState (liftInput playerControls updateGame))
+    dynamic :: (s -> Layer s i) -> Layer s i
+
+If you need one layer to consume input so that it doesn't reach another layer, use __liftAndConsumeInput__:
+
+    liftAndConsumeInput :: (i -> [j]) -> Layer s j -> Layer s i -> Layer s i
+
+If you want to resolve differences between old and new states, use __resolveDiff__:
+
+    resolveDiff :: (s -> s -> s) -> Layer s i -> Layer s i
