@@ -21,7 +21,7 @@ then an update function might look like:
 
 However, if your application is nontrivial, then there are likely complex interactions between various pieces of your program state, such as using input to update the UI which then generates events for your core logic to consume. This library provides combinators to make this easier.
 
--- Functions
+## Functions
 
 The basic data type is a Layer.
 
