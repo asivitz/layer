@@ -70,12 +70,12 @@ Conditionally run a layer with __when__:
     when :: (s -> Bool) -> Layer s i -> Layer s i
 
     -- In this example, the pressing the P key pauses the game.
-    Model :: (UIState, GameState, Bool)
+    type Model = (UIState, GameState, Bool)
     paused :: Model -> Bool
     paused (_,_,isPaused) = isPaused
 
     update = liftState _1 updateUI *.*
-             when (not . paused) (liftState gameState (liftInput playerControls updateGame))
+             when (not . paused) (liftState _2 (liftInput playerControls updateGame)) *.*
              liftState _3 (\isPaused (KeyDown KeyP) -> not isPaused)
 
 Transform a sub layer's updates with __postProcess__:
@@ -94,7 +94,7 @@ Transform a sub layer's updates with __postProcess__:
                                                                            else (ui, currentState, (isPaused, 0, currentState : listOfStates))
 
     update = liftState _1 updateUI *.*
-             postProcess debugResolver (liftState gameState (liftInput playerControls updateGame)) *.*
+             postProcess debugResolver (liftState _2 (liftInput playerControls updateGame)) *.*
              liftState _3 (\(isPaused, index, listOfStates) input -> case input of
                                     KeyDown KeyP -> (not isPaused, index, listOfStates)
                                     KeyDown RightArrow -> (isPaused, index - 1, listOfStates)
