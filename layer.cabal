@@ -10,12 +10,12 @@ maintainer:          aosivitz@gmail.com
 -- copyright:           
 category:            Control
 build-type:          Simple
-extra-source-files:  ChangeLog.md
+-- extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 library
   exposed-modules:     Control.Layer, Control.Layer.Debug
-  other-modules:       Control.Lens 
+  other-modules:       Control.SimpleLens
   other-extensions:    Rank2Types, DeriveGeneric
   build-depends:       base >=4.7
   -- hs-source-dirs:      

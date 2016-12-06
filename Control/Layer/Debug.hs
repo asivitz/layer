@@ -5,8 +5,7 @@
 module Control.Layer.Debug where
 
 import Control.Layer
-import Control.Lens
-import Data.List
+import Control.SimpleLens
 import GHC.Generics
 
 data DebugMsg = FlipDebug

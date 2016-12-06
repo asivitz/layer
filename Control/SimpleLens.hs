@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 
-module Control.Lens where
+module Control.SimpleLens where
 
 import Data.Functor.Identity
 
